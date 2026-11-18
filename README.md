@@ -154,7 +154,7 @@ La generación de resúmenes y cuestionarios se realiza mediante Groq API.
 
 La presentación del Trabajo Fin de Máster estará disponible en:
 
-Pendiente de publicación.
+[StudyIA - Presentación del TFM](presentacion/StudyIA_Presentacion_TFM.pptx.pdf)
 
 ## 9. Vídeo explicativo
 
