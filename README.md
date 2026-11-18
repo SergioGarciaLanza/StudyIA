@@ -30,7 +30,8 @@ El objetivo principal es ofrecer una herramienta sencilla, accesible e intuitiva
 - FastAPI
 - Uvicorn
 - PyMuPDF para el procesamiento de documentos PDF.
-- Google Gemini API para la generación de contenido mediante inteligencia artificial.
+- Groq API para la generación de contenido mediante inteligencia artificial.
+- Modelo `openai/gpt-oss-120b`.
 
 ## 4. Funcionalidades principales
 
@@ -72,37 +73,54 @@ La aplicación está dividida en dos partes: frontend y backend.
 - Python 3.12.
 - Node.js y npm.
 - Angular CLI.
-- Una clave de API de Google Gemini.
+- Una clave de API de Groq.
 
 ### Configuración del backend
 
 1. Acceder a la carpeta `studyia-backend`.
-2. Crear y activar un entorno virtual.
-3. Instalar las dependencias:
+
+2. Crear un entorno virtual:
+
+```powershell
+python -m venv .venv
+```
+
+3. Activar el entorno virtual:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+4. Instalar las dependencias:
 
 ```powershell
 pip install -r requirements.txt
 ```
 
-4. Crear un archivo `.env` con la variable:
+5. Crear un archivo `.env` en la carpeta `studyia-backend` con la siguiente variable:
 
 ```text
-GEMINI_API_KEY=TU_CLAVE_DE_GEMINI
+GROQ_API_KEY=TU_CLAVE_DE_GROQ
 ```
 
-5. Iniciar el servidor:
+6. Iniciar el servidor:
 
 ```powershell
 python -m uvicorn main:app --reload
 ```
 
-El backend estará disponible en `http://localhost:8000`.
+El backend estará disponible en:
 
-La documentación interactiva de la API estará disponible en `http://localhost:8000/docs`.
+`http://localhost:8000`
+
+La documentación interactiva de la API estará disponible en:
+
+`http://localhost:8000/docs`
 
 ### Configuración del frontend
 
 1. Acceder a la carpeta `studyia-frontend`.
+
 2. Instalar las dependencias:
 
 ```powershell
@@ -115,17 +133,22 @@ npm install
 ng serve --open
 ```
 
-El frontend estará disponible en `http://localhost:4200`.
+El frontend estará disponible en:
+
+`http://localhost:4200`
 
 ## 7. Despliegue
 
-La aplicación estará disponible públicamente mediante un servicio de alojamiento web.
+La aplicación está desplegada y disponible públicamente mediante los siguientes servicios:
 
-- **Aplicación web:** pendiente de publicación.
-- **Repositorio GitHub:** pendiente de publicación.
-- **Backend API:** pendiente de publicación.
+- **Aplicación web:** https://study-ia-phi.vercel.app
+- **Repositorio GitHub:** https://github.com/SergioGarciaLanza/StudyIA
+- **Backend API:** https://studyia-backend-wmse.onrender.com
+- **Documentación de la API (Swagger):** https://studyia-backend-wmse.onrender.com/docs
 
-Las direcciones definitivas se incorporarán a este documento una vez completado el despliegue.
+El frontend está alojado en Vercel y el backend en Render.
+
+La generación de resúmenes y cuestionarios se realiza mediante Groq API.
 
 ## 8. Presentación del proyecto
 
@@ -143,9 +166,11 @@ Pendiente de publicación.
 
 ## 10. Seguridad
 
-La clave de acceso a Google Gemini se configura mediante variables de entorno y no debe incluirse en el repositorio público.
+La clave de acceso a Groq se configura mediante variables de entorno y no debe incluirse en el repositorio público.
 
-Los archivos `.env`, los entornos virtuales y las dependencias instaladas localmente están excluidos del control de versiones.
+El archivo `.env`, los entornos virtuales y las dependencias instaladas localmente están excluidos del control de versiones.
+
+Para ejecutar el backend en local es necesario disponer de una clave API propia de Groq y configurarla en el archivo `.env`.
 
 ## 11. Autoría
 
