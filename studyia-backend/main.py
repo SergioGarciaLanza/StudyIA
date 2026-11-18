@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-from google import genai
+from groq import Groq
 
 load_dotenv()
 
@@ -59,118 +59,172 @@ def health():
     return {"status": "OK", "application": "StudyIA"}
 
 
+
 @app.post("/summarize")
 def summarize(request: TextRequest):
-    api_key = os.getenv("GEMINI_API_KEY")
+
+    api_key = os.getenv("GROQ_API_KEY")
 
     if not api_key:
         raise HTTPException(
             status_code=500,
-            detail="No se ha configurado la clave de Gemini."
+            detail="No se ha configurado la clave de Groq."
         )
 
     try:
-        client = genai.Client(api_key=api_key)
+        client = Groq(api_key=api_key)
 
-        response = client.models.generate_content(
-            model="gemini-3.5-flash-lite",
-            contents=(
-                "Eres un asistente educativo. "
-                "Resume los siguientes apuntes en español. "
-                "Organiza el contenido con títulos y apartados. "
-                "Destaca los conceptos más importantes y "
-                "utiliza un lenguaje claro y fácil de estudiar.\n\n"
-                + request.text
-            )
+        response = client.chat.completions.create(
+            model="openai/gpt-oss-120b",
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "Eres un asistente educativo experto. "
+                        "Resume apuntes en español. "
+                        "Organiza el contenido con títulos y apartados. "
+                        "Destaca los conceptos más importantes. "
+                        "Utiliza un lenguaje claro y fácil de estudiar. "
+                        "No omitas información importante."
+                    )
+                },
+                {
+                    "role": "user",
+                    "content": (
+                        "Resume los siguientes apuntes:\n\n"
+                        + request.text
+                    )
+                }
+            ],
+            max_completion_tokens=6000
         )
 
-        if not response.text:
+        summary = response.choices[0].message.content
+
+        if not summary:
             raise HTTPException(
                 status_code=502,
                 detail="La IA no ha devuelto ningún resumen."
             )
 
-        return {"summary": response.text}
+        return {"summary": summary}
 
     except HTTPException:
         raise
+
     except Exception as e:
-        print("ERROR DE GEMINI:", repr(e))
-    raise HTTPException(
-        status_code=502,
-        detail="No se ha podido generar el resumen con Gemini."
-    )
+        print("ERROR DE GROQ AL GENERAR RESUMEN:", repr(e))
+        raise HTTPException(
+            status_code=502,
+            detail="No se ha podido generar el resumen con Groq."
+        )
 
 
 @app.post("/generate-quiz", response_model=QuizResponse)
 def generate_quiz(request: TextRequest):
 
-    api_key = os.getenv("GEMINI_API_KEY")
+    api_key = os.getenv("GROQ_API_KEY")
 
     if not api_key:
         raise HTTPException(
             status_code=500,
-            detail="No se ha configurado la clave de Gemini."
+            detail="No se ha configurado la clave de Groq."
         )
 
     try:
-        client = genai.Client(api_key=api_key)
+        client = Groq(api_key=api_key)
 
-        response = client.models.generate_content(
-            model="gemini-3.5-flash-lite",
-            contents=f"""
-            Eres un profesor experto en crear exámenes tipo test.
+        response = client.chat.completions.create(
+            model="openai/gpt-oss-120b",
+            messages=[
+                {
+                    "role": "system",
+                    "content": """
+                    Eres un profesor experto en crear exámenes tipo test.
+                    Analiza los apuntes y genera exactamente 10 preguntas
+                    tipo test en español.
 
-            Analiza los siguientes apuntes y genera exactamente
-            10 preguntas tipo test en español.
+                    Cada pregunta debe tener:
+                    - Un enunciado claro.
+                    - Exactamente 4 opciones.
+                    - Una única respuesta correcta.
+                    - Una explicación de la respuesta correcta.
 
-            Cada pregunta debe tener:
-            - Un enunciado claro.
-            - Exactamente 4 opciones de respuesta.
-            - Una única respuesta correcta.
-            - Una explicación de la respuesta correcta.
+                    El índice de la respuesta correcta debe ser:
+                    0 para A, 1 para B, 2 para C y 3 para D.
+                    """
+                },
+                {
+                    "role": "user",
+                    "content": f"""
+                    Genera las 10 preguntas a partir de estos apuntes:
 
-            Devuelve exclusivamente un JSON válido con esta estructura:
-
-            {{
-                "questions": [
-                    {{
-                        "question": "Enunciado de la pregunta",
-                        "options": [
-                            "Opción A",
-                            "Opción B",
-                            "Opción C",
-                            "Opción D"
-                        ],
-                        "correct_answer": 0,
-                        "explanation": "Explicación de la respuesta"
-                    }}
-                ]
-            }}
-
-            El campo correct_answer debe ser un índice:
-            0 para A, 1 para B, 2 para C y 3 para D.
-
-            APUNTES:
-            {request.text}
-            """,
-            config={
-                "response_mime_type": "application/json",
-                "response_schema": QuizResponse
-            }
+                    {request.text}
+                    """
+                }
+            ],
+            response_format={
+                "type": "json_schema",
+                "json_schema": {
+                    "name": "studyia_quiz",
+                    "strict": True,
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "questions": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "question": {
+                                            "type": "string"
+                                        },
+                                        "options": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "correct_answer": {
+                                            "type": "integer",
+                                            "enum": [0, 1, 2, 3]
+                                        },
+                                        "explanation": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "question",
+                                        "options",
+                                        "correct_answer",
+                                        "explanation"
+                                    ],
+                                    "additionalProperties": False
+                                }
+                            }
+                        },
+                        "required": ["questions"],
+                        "additionalProperties": False
+                    }
+                }
+            },
+            max_completion_tokens=6000
         )
 
-        if not response.text:
+        content = response.choices[0].message.content
+
+        if not content:
             raise HTTPException(
                 status_code=502,
-                detail="La IA no ha generado las preguntas."
+                detail="Groq no ha generado las preguntas."
             )
 
-        quiz = QuizResponse.model_validate_json(response.text)
+        quiz = QuizResponse.model_validate_json(content)
 
         if len(quiz.questions) != 10:
-            raise HTTPException(status_code=502, 
-                                detail="La IA no ha generado exactamente 10 preguntas."
+            raise HTTPException(
+                status_code=502,
+                detail="La IA no ha generado exactamente 10 preguntas."
             )
 
         if any(
@@ -186,12 +240,15 @@ def generate_quiz(request: TextRequest):
 
     except HTTPException:
         raise
+
     except Exception as e:
-        print("ERROR AL GENERAR TEST:", repr(e))
+        print("ERROR AL GENERAR TEST CON GROQ:", repr(e))
         raise HTTPException(
             status_code=502,
-            detail="No se ha podido generar el test."
+            detail="No se ha podido generar el test con Groq."
         )
+
+
 
 
 @app.post("/upload-document")
