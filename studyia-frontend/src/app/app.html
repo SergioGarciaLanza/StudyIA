@@ -1,0 +1,193 @@
+
+<div class="app-container">
+
+  <header class="header">
+    <div class="brand">
+      <div class="logo">S</div>
+      <div>
+        <h1>StudyIA</h1>
+        <span>Tu asistente inteligente de estudio</span>
+      </div>
+    </div>
+
+    <div class="connection">
+      <span
+        class="status-dot"
+        [class.connected]="conectado()">
+      </span>
+      {{ mensajeConexion() }}
+    </div>
+  </header>
+
+  <main class="main-content">
+
+    <section class="welcome">
+      <h2>¡Hola! ¿Qué vamos a estudiar hoy?</h2>
+      <p>
+        Introduce tus apuntes y deja que la inteligencia artificial
+        te ayude a estudiar de forma más eficiente.
+      </p>
+    </section>
+
+    <section class="study-card">
+
+      <h3>📚 Tus apuntes</h3>
+
+      <p class="description">
+        Pega aquí el contenido que quieres estudiar.
+      </p>
+
+      <div class="upload-section">
+        <label for="documentFile">
+          📄 Selecciona tus apuntes (PDF o TXT)
+        </label>
+
+        <input
+          type="file"
+          id="documentFile"
+          accept=".pdf,.txt"
+          (change)="seleccionarArchivo($event)"
+        />
+      </div>
+
+      <textarea
+        placeholder="Pega aquí tus apuntes, textos o contenido de estudio..."
+        [value]="contenido()"
+        (input)="actualizarTexto($event)">
+      </textarea>
+
+      <div class="text-info">
+        {{ contenido().length }} caracteres
+      </div>
+
+      
+      <div class="actions">
+
+        <button
+          class="summary-button"
+          [disabled]="!contenido().trim() || cargandoResumen()"
+          (click)="generarResumen()">
+          @if (cargandoResumen()) {
+            Generando resumen...
+          } @else {
+            ✨ Generar resumen
+          }
+        </button>
+
+        <button
+          class="test-button"
+          [disabled]="!contenido().trim()"
+          (click)="generarTest()">
+          📝 Generar test
+        </button>
+
+      </div>
+
+
+      <p class="action-message">
+        {{ mensajeAccion() }}
+      </p>
+
+      @if (resumen()) {
+        <section class="result-card">
+          <h3>✨ Tu resumen de estudio</h3>
+
+          <div class="summary-content">
+            {{ resumen() }}
+          </div>
+          <button
+            type="button"
+            class="primary-button"
+            (click)="descargarResumenPDF()"
+          >
+            📥 Descargar resumen en PDF
+          </button>
+        </section>
+      }
+      
+      @if (preguntas().length > 0) {
+        <section class="result-card quiz-card">
+          <h3>📝 Tu test de estudio</h3>
+
+          @for (pregunta of preguntas(); track $index; let indicePregunta = $index) {
+            <div class="question-block">
+              <h4>
+                {{ indicePregunta + 1 }}. {{ pregunta.question }}
+              </h4>
+
+              <div class="options-list">
+                @for (opcion of pregunta.options; track $index; let indiceOpcion = $index) {
+                  <button
+                    type="button"
+                    class="option-button"
+                    [class.selected]="respuestasSeleccionadas()[indicePregunta] === indiceOpcion"
+                    (click)="seleccionarRespuesta(indicePregunta, indiceOpcion)"
+                  >
+                    {{ opcion }}
+                  </button>
+                }
+              </div>
+            </div>
+          }
+
+          <button
+            type="button"
+            class="primary-button"
+            (click)="corregirTest()"
+            [disabled]="testCorregido() || respuestasSeleccionadas().some(respuesta => respuesta === -1)"
+          >
+            @if (respuestasSeleccionadas().some(respuesta => respuesta === -1)) {
+              Responde todas las preguntas
+            } @else {
+              Corregir test
+            }
+          </button>
+
+          @if (testCorregido()) {
+            <div class="quiz-result">
+              <h3>
+                Resultado: {{ obtenerPuntuacion() }} / {{ preguntas().length }}
+              </h3>
+
+              @for (pregunta of preguntas(); track $index) {
+                <div class="explanation-block">
+                  <h4>Pregunta {{ $index + 1 }}</h4>
+
+                  @if (respuestasSeleccionadas()[$index] === pregunta.correct_answer) {
+                    <p class="correct-answer">✓ ¡Respuesta correcta!</p>
+                  } @else {
+                    <p class="wrong-answer">✗ Respuesta incorrecta</p>
+                    <p>
+                      <strong>Respuesta correcta:</strong>
+                      {{ pregunta.options[pregunta.correct_answer] }}
+                    </p>
+                  }
+
+                  <p>
+                    <strong>Explicación:</strong>
+                    {{ pregunta.explanation }}
+                  </p>
+                </div>
+              }
+              <button
+                type="button"
+                class="download-quiz-button"
+                (click)="descargarTestPDF()"
+              >
+                📥 Descargar test corregido en PDF
+              </button>
+            </div>
+          }
+        </section>
+      }
+
+
+    </section>
+
+    <footer>
+      StudyIA · Proyecto de Trabajo Fin de Máster
+    </footer>
+
+  </main>
+
+</div>

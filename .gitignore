@@ -1,0 +1,18 @@
+# Archivos y carpetas privados
+.env
+.env.*
+!.env.example
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Angular y Node
+node_modules/
+dist/
+.angular/
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
