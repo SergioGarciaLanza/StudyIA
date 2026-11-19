@@ -160,9 +160,7 @@ La presentación del Trabajo Fin de Máster estará disponible en:
 
 El vídeo incluirá una explicación del proyecto y una demostración de su funcionamiento mediante captura de pantalla.
 
-Enlace al vídeo:
-
-Pendiente de publicación.
+Enlace al vídeo: [Ver vídeo de presentación y demostración de StudyIA](https://youtu.be/WL1vmrTNAds)
 
 ## 10. Seguridad
 
